@@ -114,3 +114,13 @@ export function formatDateTime(value: string | null | undefined) {
     timeStyle: "short",
   }).format(date);
 }
+
+export function formatOdds(value: number | null | undefined) {
+  if (value == null) return "—";
+  return value > 0 ? `+${value}` : `${value}`;
+}
+
+export function formatStatus(value: string | null | undefined) {
+  if (!value) return "—";
+  return value.charAt(0).toUpperCase() + value.slice(1);
+}
