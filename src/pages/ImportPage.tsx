@@ -1,11 +1,14 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   formatCurrency,
   formatDateTime,
+  formatOdds,
+  formatStatus,
   importShareLink,
   type ImportShareLinkResponse,
 } from "../lib/api";
+import { Toast } from "../components/Toast";
 
 const sampleHighlights = [
   "Import shared bets in seconds",
@@ -18,6 +21,7 @@ export function ImportPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportShareLinkResponse | null>(null);
+  const [showToast, setShowToast] = useState(false);
 
   const resultSummary = useMemo(() => {
     if (!result?.parsedBet) return null;
@@ -29,8 +33,18 @@ export function ImportPage() {
       placedAt: result.parsedBet.placedAt,
       status: result.parsedBet.status,
       betType: result.parsedBet.betType,
+      legs: result.parsedBet.legs,
     };
   }, [result]);
+
+  useEffect(() => {
+    if (!result?.betId) return;
+
+    setShowToast(true);
+    const timer = window.setTimeout(() => setShowToast(false), 2500);
+
+    return () => window.clearTimeout(timer);
+  }, [result?.betId]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -40,6 +54,7 @@ export function ImportPage() {
     try {
       const data = await importShareLink(url);
       setResult(data);
+      setUrl("");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Import failed.");
     } finally {
@@ -49,6 +64,8 @@ export function ImportPage() {
 
   return (
     <main className="page">
+      {showToast ? <Toast message="Bet imported successfully." /> : null}
+
       <section className="hero">
         <div className="hero__content">
           <p className="hero__eyebrow">Betting intelligence, organized</p>
@@ -130,39 +147,61 @@ export function ImportPage() {
             </div>
 
             {resultSummary ? (
-              <div className="stats-grid stats-grid--compact">
-                <article className="card stat-card">
-                  <p className="stat-card__label">Bet Type</p>
-                  <p className="stat-card__value stat-card__value--sm">
-                    {resultSummary.betType}
-                  </p>
-                </article>
+              <>
+                <div className="stats-grid stats-grid--compact">
+                  <article className="card stat-card">
+                    <p className="stat-card__label">Bet Type</p>
+                    <p className="stat-card__value stat-card__value--sm">
+                      {resultSummary.betType}
+                    </p>
+                  </article>
 
-                <article className="card stat-card">
-                  <p className="stat-card__label">Legs</p>
-                  <p className="stat-card__value">{resultSummary.legCount}</p>
-                </article>
+                  <article className="card stat-card">
+                    <p className="stat-card__label">Status</p>
+                    <p className="stat-card__value stat-card__value--sm">
+                      {formatStatus(resultSummary.status)}
+                    </p>
+                  </article>
 
-                <article className="card stat-card">
-                  <p className="stat-card__label">Stake</p>
-                  <p className="stat-card__value stat-card__value--sm">
-                    {formatCurrency(resultSummary.stake)}
-                  </p>
-                </article>
+                  <article className="card stat-card">
+                    <p className="stat-card__label">Stake</p>
+                    <p className="stat-card__value stat-card__value--sm">
+                      {formatCurrency(resultSummary.stake)}
+                    </p>
+                  </article>
 
-                <article className="card stat-card stat-card--accent">
-                  <p className="stat-card__label">Payout</p>
-                  <p className="stat-card__value stat-card__value--sm">
-                    {formatCurrency(resultSummary.payout)}
-                  </p>
-                </article>
-              </div>
-            ) : null}
+                  <article className="card stat-card stat-card--accent">
+                    <p className="stat-card__label">Payout</p>
+                    <p className="stat-card__value stat-card__value--sm">
+                      {formatCurrency(resultSummary.payout)}
+                    </p>
+                  </article>
+                </div>
 
-            {resultSummary?.placedAt ? (
-              <p className="muted">
-                Imported bet placed {formatDateTime(resultSummary.placedAt)}.
-              </p>
+                <p className="muted">
+                  Imported bet placed {formatDateTime(resultSummary.placedAt)}.
+                </p>
+
+                <div className="leg-card-grid">
+                  {resultSummary.legs.map((leg, index) => (
+                    <article key={`${leg.eventName}-${index}`} className="leg-card">
+                      <p className="leg-card__eyebrow">
+                        Leg {index + 1}
+                      </p>
+                      <h3 className="leg-card__title">
+                        {leg.eventName ?? "Unknown Event"}
+                      </h3>
+                      <p className="leg-card__meta">
+                        {leg.marketSubtype ?? "Unknown Market"} —{" "}
+                        {leg.selectionType ?? "Unknown Selection"}
+                      </p>
+                      <p className="leg-card__odds">
+                        Odds: {formatOdds(leg.oddsAmerican)}
+                      </p>
+                    </article>
+                  ))}
+                </div>
+              </>
             ) : null}
           </section>
         ) : null}

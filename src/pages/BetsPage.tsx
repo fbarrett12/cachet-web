@@ -1,7 +1,14 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "react-router-dom";
-import { formatCurrency, formatDateTime, listBets } from "../lib/api";
+import {
+  formatCurrency,
+  formatDateTime,
+  formatOdds,
+  formatStatus,
+  listBets,
+} from "../lib/api";
+import { LoadingCard } from "../components/LoadingCard";
 
 export function BetsPage() {
   const [search, setSearch] = useState("");
@@ -62,8 +69,10 @@ export function BetsPage() {
       </div>
 
       {query.isLoading ? (
-        <div className="card">
-          <p className="muted">Loading bets...</p>
+        <div className="stack">
+          <LoadingCard lines={3} />
+          <LoadingCard lines={4} />
+          <LoadingCard lines={4} />
         </div>
       ) : null}
 
@@ -167,7 +176,9 @@ export function BetsPage() {
                       <div className="badge-row">
                         <span className="badge">{bet.sportsbook ?? "unknown"}</span>
                         <span className="badge">{bet.betType}</span>
-                        <span className="badge badge--accent">{bet.status}</span>
+                        <span className="badge badge--accent">
+                          {formatStatus(bet.status)}
+                        </span>
                       </div>
 
                       <p>
@@ -194,7 +205,9 @@ export function BetsPage() {
                       {bet.legsPreview.map((leg) => (
                         <li key={leg.id}>
                           {leg.eventName} — {leg.marketSubtype} — {leg.selectionType}
-                          {leg.oddsAmerican != null ? ` (${leg.oddsAmerican})` : ""}
+                          {leg.oddsAmerican != null
+                            ? ` (${formatOdds(leg.oddsAmerican)})`
+                            : ""}
                         </li>
                       ))}
                     </ul>

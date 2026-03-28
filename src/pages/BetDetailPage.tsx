@@ -1,6 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-import { formatCurrency, formatDateTime, getBetById } from "../lib/api";
+import {
+  formatCurrency,
+  formatDateTime,
+  formatOdds,
+  formatStatus,
+  getBetById,
+} from "../lib/api";
+import { LoadingCard } from "../components/LoadingCard";
 
 export function BetDetailPage() {
   const { betId } = useParams();
@@ -23,8 +30,9 @@ export function BetDetailPage() {
       </div>
 
       {query.isLoading ? (
-        <div className="card">
-          <p className="muted">Loading bet...</p>
+        <div className="detail-grid">
+          <LoadingCard lines={5} />
+          <LoadingCard lines={5} />
         </div>
       ) : null}
 
@@ -35,14 +43,42 @@ export function BetDetailPage() {
       ) : null}
 
       {bet ? (
-        <div className="detail-grid">
+        <div className="stack">
           <section className="card">
             <h2 className="card__title">Bet Summary</h2>
 
             <div className="badge-row">
               <span className="badge">{bet.sportsbook ?? "unknown"}</span>
               <span className="badge">{bet.betType}</span>
-              <span className="badge badge--accent">{bet.status}</span>
+              <span className="badge badge--accent">{formatStatus(bet.status)}</span>
+            </div>
+
+            <div className="stats-grid stats-grid--compact">
+              <article className="card stat-card">
+                <p className="stat-card__label">Stake</p>
+                <p className="stat-card__value stat-card__value--sm">
+                  {formatCurrency(bet.stake)}
+                </p>
+              </article>
+
+              <article className="card stat-card">
+                <p className="stat-card__label">Potential Return</p>
+                <p className="stat-card__value stat-card__value--sm">
+                  {formatCurrency(bet.toWin)}
+                </p>
+              </article>
+
+              <article className="card stat-card">
+                <p className="stat-card__label">Payout</p>
+                <p className="stat-card__value stat-card__value--sm">
+                  {formatCurrency(bet.payout)}
+                </p>
+              </article>
+
+              <article className="card stat-card stat-card--accent">
+                <p className="stat-card__label">Legs</p>
+                <p className="stat-card__value">{bet.legs?.length ?? 0}</p>
+              </article>
             </div>
 
             <div className="kv-list">
@@ -53,15 +89,6 @@ export function BetDetailPage() {
                 <strong>Placed At:</strong> {formatDateTime(bet.placedAt)}
               </p>
               <p>
-                <strong>Stake:</strong> {formatCurrency(bet.stake)}
-              </p>
-              <p>
-                <strong>Potential Return:</strong> {formatCurrency(bet.toWin)}
-              </p>
-              <p>
-                <strong>Payout:</strong> {formatCurrency(bet.payout)}
-              </p>
-              <p>
                 <strong>External Bet ID:</strong> {bet.externalBetId ?? "—"}
               </p>
             </div>
@@ -70,24 +97,23 @@ export function BetDetailPage() {
           <section className="card card--accent">
             <h2 className="card__title">Legs</h2>
 
-            <ul className="legs-list">
-              {bet.legs?.map((leg) => (
-                <li key={leg.id}>
-                  <div>
-                    <strong>{leg.eventName ?? "Unknown Event"}</strong>
-                  </div>
-                  <div>
+            <div className="leg-card-grid">
+              {bet.legs?.map((leg, index) => (
+                <article key={leg.id} className="leg-card">
+                  <p className="leg-card__eyebrow">Leg {index + 1}</p>
+                  <h3 className="leg-card__title">
+                    {leg.eventName ?? "Unknown Event"}
+                  </h3>
+                  <p className="leg-card__meta">
                     {leg.marketSubtype ?? "Unknown Market"} —{" "}
                     {leg.selectionType ?? "Unknown Selection"}
-                  </div>
-                  <div>
-                    {leg.oddsAmerican != null
-                      ? `Odds: ${leg.oddsAmerican}`
-                      : "Odds: —"}
-                  </div>
-                </li>
+                  </p>
+                  <p className="leg-card__odds">
+                    Odds: {formatOdds(leg.oddsAmerican)}
+                  </p>
+                </article>
               ))}
-            </ul>
+            </div>
           </section>
         </div>
       ) : null}
