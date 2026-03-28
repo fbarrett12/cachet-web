@@ -92,3 +92,25 @@ export async function listBets(limit?: number) {
 export async function getBetById(id: string) {
   return apiFetch<{ bet: Bet }>(`/api/bets/${id}`);
 }
+
+export function formatCurrency(value: number | null | undefined) {
+  if (value == null) return "—";
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(value);
+}
+
+export function formatDateTime(value: string | null | undefined) {
+  if (!value) return "—";
+
+  const date = new Date(value);
+
+  if (Number.isNaN(date.getTime())) return value;
+
+  return new Intl.DateTimeFormat("en-US", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
