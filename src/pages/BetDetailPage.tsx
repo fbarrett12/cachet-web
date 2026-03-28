@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
-import { getBetById } from "../lib/api";
+import { formatCurrency, formatDateTime, getBetById } from "../lib/api";
 
 export function BetDetailPage() {
   const { betId } = useParams();
@@ -22,9 +22,16 @@ export function BetDetailPage() {
         </p>
       </div>
 
-      {query.isLoading ? <p className="muted">Loading bet...</p> : null}
+      {query.isLoading ? (
+        <div className="card">
+          <p className="muted">Loading bet...</p>
+        </div>
+      ) : null}
+
       {query.isError ? (
-        <p className="error-text">Failed to load bet.</p>
+        <div className="card">
+          <p className="error-text">Failed to load bet.</p>
+        </div>
       ) : null}
 
       {bet ? (
@@ -43,13 +50,16 @@ export function BetDetailPage() {
                 <strong>ID:</strong> {bet.id}
               </p>
               <p>
-                <strong>Placed At:</strong> {bet.placedAt ?? "—"}
+                <strong>Placed At:</strong> {formatDateTime(bet.placedAt)}
               </p>
               <p>
-                <strong>Stake:</strong> {bet.stake ?? "—"}
+                <strong>Stake:</strong> {formatCurrency(bet.stake)}
               </p>
               <p>
-                <strong>Payout:</strong> {bet.payout ?? "—"}
+                <strong>Potential Return:</strong> {formatCurrency(bet.toWin)}
+              </p>
+              <p>
+                <strong>Payout:</strong> {formatCurrency(bet.payout)}
               </p>
               <p>
                 <strong>External Bet ID:</strong> {bet.externalBetId ?? "—"}

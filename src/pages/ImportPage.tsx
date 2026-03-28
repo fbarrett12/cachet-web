@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { importShareLink, type ImportShareLinkResponse } from "../lib/api";
+import {
+  formatCurrency,
+  formatDateTime,
+  importShareLink,
+  type ImportShareLinkResponse,
+} from "../lib/api";
 
 export function ImportPage() {
   const [url, setUrl] = useState("");
@@ -73,14 +78,26 @@ export function ImportPage() {
                 </p>
               ) : null}
 
-              {result.message ? (
-                <p className="muted">{result.message}</p>
-              ) : null}
+              {result.message ? <p className="muted">{result.message}</p> : null}
 
               {result.parsedBet ? (
                 <>
                   <p>
                     <strong>Bet Type:</strong> {result.parsedBet.betType}
+                  </p>
+                  <p>
+                    <strong>Status:</strong> {result.parsedBet.status ?? "—"}
+                  </p>
+                  <p>
+                    <strong>Placed At:</strong>{" "}
+                    {formatDateTime(result.parsedBet.placedAt)}
+                  </p>
+                  <p>
+                    <strong>Stake:</strong> {formatCurrency(result.parsedBet.stake)}
+                  </p>
+                  <p>
+                    <strong>Payout:</strong>{" "}
+                    {formatCurrency(result.parsedBet.payout)}
                   </p>
                   <p>
                     <strong>Leg Count:</strong> {result.parsedBet.legs.length}
